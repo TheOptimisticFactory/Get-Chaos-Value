@@ -543,6 +543,7 @@ public partial class Main
             "Gamble" => Gamble,
             "Deal" => Deal,
             "Haggle" => Haggle,
+            "Purchase" => Purchase,
             _ => None
         };
 
@@ -609,6 +610,30 @@ public partial class Main
                     var leftTop = box.BottomLeft.ToVector2Num() - new Vector2(0, textSize.Y);
                     Graphics.DrawBox(leftTop, leftTop + textSize, Color.Black);
                     Graphics.DrawText(text, leftTop, Settings.VisualPriceSettings.FontColor);
+                }
+            }
+        }
+
+        // Nameless Seer
+        if (haggleType == Purchase)
+        {
+            if (!Settings.LeagueSpecificSettings.ShowNamelessSeerPrices || !HagglePanel.IsVisible) return;
+
+            var formattedItemList = FormatItems(itemList);
+            formattedItemList.ForEach(GetValue);
+            var tooltipRect = HoveredItem?.Element.AsObject<HoverItemIcon>()?.Tooltip?.GetClientRect() ?? new RectangleF(0, 0, 0, 0);
+            foreach (var customItem in formattedItemList)
+            {
+                var box = customItem.Element.GetClientRectCache;
+                if (tooltipRect.Intersects(box))
+                {
+                    continue;
+                }
+
+                if (customItem.PriceData.MinChaosValue > 0)
+                {
+                    Graphics.DrawText(customItem.PriceData.MinChaosValue.FormatNumber(2), box.TopRight, Settings.VisualPriceSettings.FontColor,
+                        FontAlign.Right);
                 }
             }
         }
@@ -740,7 +765,7 @@ public partial class Main
                         }
                     }
 
-                    foreach (var item in items.DefaultIfEmpty())
+                    foreach (var item in items)
                     {
                         ImGui.TableNextRow();
                         ImGui.TableNextColumn();

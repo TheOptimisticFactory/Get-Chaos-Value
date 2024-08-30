@@ -66,6 +66,7 @@ public class LeagueSpecificSettings
     public ToggleNode ShowRitualWindowPrices { get; set; } = new(true);
     public ToggleNode ShowVillageRewardWindowPrices { get; set; } = new(true);
     public ToggleNode ShowSanctumRewardPrices { get; set; } = new(true);
+    public ToggleNode ShowNamelessSeerPrices { get; set; } = new(true);
     public ToggleNode ShowVillageUniqueDisenchantValueWindow { get; set; } = new(false);
 
     public ToggleNode ShowExpeditionVendorOverlay { get; set; } = new(false);
