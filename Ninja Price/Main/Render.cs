@@ -532,7 +532,7 @@ public partial class Main
 
     private void ProcessExpeditionWindow()
     {
-        if (!Settings.LeagueSpecificSettings.ShowExpeditionVendorOverlay || !HagglePanel.IsVisible) return;
+        if ((!Settings.LeagueSpecificSettings.ShowNamelessSeerPrices && !Settings.LeagueSpecificSettings.ShowExpeditionVendorOverlay) || !HagglePanel.IsVisible) return;
 
         // Return Haggle Window Type
         var haggleText = HagglePanel.GetChildFromIndices(6, 2, 0)?.Text;
@@ -549,7 +549,7 @@ public partial class Main
 
         var inventory = HagglePanel.GetChildFromIndices(8, 1, 0, 0);
         var itemList = inventory?.GetChildrenAs<NormalInventoryItem>().Skip(1).ToList() ?? new List<NormalInventoryItem>();
-        if (haggleType == Gamble)
+        if (haggleType == Gamble && Settings.LeagueSpecificSettings.ShowExpeditionVendorOverlay)
         {
             if (Settings.DebugSettings.EnableDebugLogging)
             {
@@ -581,7 +581,7 @@ public partial class Main
             }
         }
 
-        if (haggleType == Haggle)
+        if (haggleType == Haggle && Settings.LeagueSpecificSettings.ShowExpeditionVendorOverlay)
         {
             var formattedItemList = FormatItems(itemList);
             formattedItemList.ForEach(GetValue);
@@ -615,10 +615,8 @@ public partial class Main
         }
 
         // Nameless Seer
-        if (haggleType == Purchase)
+        if (haggleType == Purchase && Settings.LeagueSpecificSettings.ShowNamelessSeerPrices)
         {
-            if (!Settings.LeagueSpecificSettings.ShowNamelessSeerPrices || !HagglePanel.IsVisible) return;
-
             var formattedItemList = FormatItems(itemList);
             formattedItemList.ForEach(GetValue);
             var tooltipRect = HoveredItem?.Element.AsObject<HoverItemIcon>()?.Tooltip?.GetClientRect() ?? new RectangleF(0, 0, 0, 0);
