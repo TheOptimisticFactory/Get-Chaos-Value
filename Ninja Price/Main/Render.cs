@@ -40,7 +40,7 @@ public partial class Main
     public StashElement StashPanel { get; set; }
     public InventoryElement InventoryPanel { get; set; }
     public Element HagglePanel { get; set; }
-
+    public Element UltimatumPanel { get; set; }
     public CustomItem HoveredItem { get; set; }
 
     private readonly CachedValue<List<ItemOnGround>> _slowGroundItems;
@@ -123,6 +123,7 @@ public partial class Main
         };
         InventoryPanel = GameController.Game.IngameState.IngameUi.InventoryPanel;
         HagglePanel = GameController.Game.IngameState.IngameUi.HaggleWindow;
+        UltimatumPanel = GameController.Game.IngameState.IngameUi.UltimatumPanel;
 
         #endregion
 
@@ -239,6 +240,7 @@ public partial class Main
         ShowSanctumOfferPrices();
         ProcessHoveredItem();
         VisibleInventoryValue();
+        ProcessUltimatumPanel();
 
         if (StashPanel.IsVisible)
         {
@@ -532,7 +534,7 @@ public partial class Main
 
     private void ProcessExpeditionWindow()
     {
-        if (!Settings.LeagueSpecificSettings.ShowExpeditionVendorOverlay || !HagglePanel.IsVisible) return;
+        if ((!Settings.LeagueSpecificSettings.ShowNamelessSeerPrices && !Settings.LeagueSpecificSettings.ShowExpeditionVendorOverlay) || !HagglePanel.IsVisible) return;
 
         // Return Haggle Window Type
         var haggleText = HagglePanel.GetChildFromIndices(6, 2, 0)?.Text;
@@ -543,12 +545,13 @@ public partial class Main
             "Gamble" => Gamble,
             "Deal" => Deal,
             "Haggle" => Haggle,
+            "Purchase" => Purchase,
             _ => None
         };
 
         var inventory = HagglePanel.GetChildFromIndices(8, 1, 0, 0);
         var itemList = inventory?.GetChildrenAs<NormalInventoryItem>().Skip(1).ToList() ?? new List<NormalInventoryItem>();
-        if (haggleType == Gamble)
+        if (haggleType == Gamble && Settings.LeagueSpecificSettings.ShowExpeditionVendorOverlay)
         {
             if (Settings.DebugSettings.EnableDebugLogging)
             {
@@ -580,7 +583,7 @@ public partial class Main
             }
         }
 
-        if (haggleType == Haggle)
+        if (haggleType == Haggle && Settings.LeagueSpecificSettings.ShowExpeditionVendorOverlay)
         {
             var formattedItemList = FormatItems(itemList);
             formattedItemList.ForEach(GetValue);
@@ -609,6 +612,28 @@ public partial class Main
                     var leftTop = box.BottomLeft.ToVector2Num() - new Vector2(0, textSize.Y);
                     Graphics.DrawBox(leftTop, leftTop + textSize, Color.Black);
                     Graphics.DrawText(text, leftTop, Settings.VisualPriceSettings.FontColor);
+                }
+            }
+        }
+
+        // Nameless Seer
+        if (haggleType == Purchase && Settings.LeagueSpecificSettings.ShowNamelessSeerPrices)
+        {
+            var formattedItemList = FormatItems(itemList);
+            formattedItemList.ForEach(GetValue);
+            var tooltipRect = HoveredItem?.Element.AsObject<HoverItemIcon>()?.Tooltip?.GetClientRect() ?? new RectangleF(0, 0, 0, 0);
+            foreach (var customItem in formattedItemList)
+            {
+                var box = customItem.Element.GetClientRectCache;
+                if (tooltipRect.Intersects(box))
+                {
+                    continue;
+                }
+
+                if (customItem.PriceData.MinChaosValue > 0)
+                {
+                    Graphics.DrawText(customItem.PriceData.MinChaosValue.FormatNumber(2), box.TopRight, Settings.VisualPriceSettings.FontColor,
+                        FontAlign.Right);
                 }
             }
         }
@@ -949,6 +974,86 @@ public partial class Main
         }
         
         ImGui.End();
+    }
+    private void ProcessUltimatumPanel()
+    {
+        if (!Settings.LeagueSpecificSettings.ShowUltimatumOverlay || GameController.IngameState.IngameUi.UltimatumPanel is not
+            {
+                IsVisible: true
+            })
+            return;
+
+        // Show reward choices
+        if (GameController.IngameState.IngameUi.UltimatumPanel.GetChildAtIndex(6) is not { IsVisible: true })
+        {
+            var inventory = UltimatumPanel.GetChildFromIndices(2, 1, 1);
+            var itemList = inventory?.GetChildrenAs<NormalInventoryItem>().Skip(1).ToList() ?? new List<NormalInventoryItem>();
+
+            var formattedItemList = FormatItems(itemList);
+            formattedItemList.ForEach(GetValue);
+            var tooltipRect = HoveredItem?.Element.AsObject<HoverItemIcon>()?.Tooltip?.GetClientRect() ?? new RectangleF(0, 0, 0, 0);
+
+            foreach (var customItem in formattedItemList)
+            {
+                var box = customItem.Element.GetClientRectCache;
+                if (tooltipRect.Intersects(box))
+                {
+                    continue;
+                }
+
+                if (customItem.PriceData.MinChaosValue > 0)
+                {
+                    Graphics.DrawText(customItem.PriceData.MinChaosValue.FormatNumber(2), box.TopRight, Settings.VisualPriceSettings.FontColor,
+                        FontAlign.Right);
+                }
+            }
+
+            inventory = UltimatumPanel.GetChildFromIndices(1, 1, 0);
+            itemList = inventory?.GetChildrenAs<NormalInventoryItem>().Skip(1).ToList() ?? new List<NormalInventoryItem>();
+
+            formattedItemList = FormatItems(itemList);
+            formattedItemList.ForEach(GetValue);
+            tooltipRect = HoveredItem?.Element.AsObject<HoverItemIcon>()?.Tooltip?.GetClientRect() ?? new RectangleF(0, 0, 0, 0);
+
+            foreach (var customItem in formattedItemList)
+            {
+                var box = customItem.Element.GetClientRectCache;
+                if (tooltipRect.Intersects(box))
+                {
+                    continue;
+                }
+
+                if (customItem.PriceData.MinChaosValue > 0)
+                {
+                    Graphics.DrawText(customItem.PriceData.MinChaosValue.FormatNumber(2), box.TopRight - 20, Settings.VisualPriceSettings.FontColor,
+                        FontAlign.Right);
+                }
+            }
+        }
+        // Show rewards inventory
+         else {
+            var inventory = UltimatumPanel.GetChildFromIndices(6, 2);
+            var itemList = inventory?.GetChildrenAs<NormalInventoryItem>().Skip(1).ToList() ?? new List<NormalInventoryItem>();
+
+            var formattedItemList = FormatItems(itemList);
+            formattedItemList.ForEach(GetValue);
+            var tooltipRect = HoveredItem?.Element.AsObject<HoverItemIcon>()?.Tooltip?.GetClientRect() ?? new RectangleF(0, 0, 0, 0);
+
+            foreach (var customItem in formattedItemList)
+            {
+                var box = customItem.Element.GetClientRectCache;
+                if (tooltipRect.Intersects(box))
+                {
+                    continue;
+                }
+
+                if (customItem.PriceData.MinChaosValue > 0)
+                {
+                    Graphics.DrawText(customItem.PriceData.MinChaosValue.FormatNumber(2), box.TopRight, Settings.VisualPriceSettings.FontColor,
+                        FontAlign.Right);
+                }
+            }
+         }
     }
 
     private bool TryGetArtifactPrice(CustomItem item, out double amount, out string artifactName)
