@@ -70,6 +70,7 @@ public class LeagueSpecificSettings
     public ToggleNode ShowVillageUniqueDisenchantValueWindow { get; set; } = new(false);
 
     public ToggleNode ShowExpeditionVendorOverlay { get; set; } = new(false);
+    public ToggleNode ShowUltimatumOverlay { get; set; } = new(true);
 
     [Menu("Artifact Chaos Prices", "Display chaos equivalent price for items with artifact costs", 7)]
     public ToggleNode ShowArtifactChaosPrices { get; set; } = new(true);
